@@ -48,6 +48,3 @@ def setup_deployment(config, repo):
         run('virtualenv --system-site-packages venv')
 
     deploy(config)
-
-    with cd(repo_dir):
-        run('venv/bin/python web/manage_{0}.py createsuperuser'.format(config))
