@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo 'VACUUM ANALYZE;' | psql guidcoin_staging
+/var/www/python/guidcoin-staging/venv/bin/python /var/www/python/guidcoin-staging/web/manage_staging.py clearsessions
+
