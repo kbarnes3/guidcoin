@@ -31,13 +31,15 @@
     <body>
 
         <!-- Fixed navbar -->
-        <div class="navbar navbar-default navbar-fixed-top">
+        <div class="navbar navbar-inverted navbar-fixed-top">
             <div class="container">
                 <div class="navbar-header">
                     <a class="navbar-brand" href="/">GUIDcoin</a>
                 </div>
             </div>
         </div>
+
+        {% block fullwidth %}{% endblock %}
 
         <div class="container main-container">
             {% block content %}{% endblock %}
