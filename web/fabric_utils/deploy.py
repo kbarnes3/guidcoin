@@ -32,7 +32,6 @@ def deploy(config):
     _update_source(repo_dir, branch)
     _compile_source(config, repo_dir, web_dir, virtualenv_python)
     _update_scripts(config, daily_scripts_dir)
-    _update_database(config, web_dir, virtualenv_python)
     _reload_code(config, init_dir)
     _reload_web(config, nginx_dir)
     _run_tests(config, web_dir, virtualenv_python)
@@ -72,12 +71,6 @@ def _update_scripts(config, daily_scripts_dir):
 
     with cd(CRON_DAILY_DIR):
         sudo('chmod 755 guidcoin-{0}-*'.format(config))
-
-
-def _update_database(config, web_dir, virtualenv_python):
-    with cd(web_dir):
-        sudo('{0} manage_{1}.py syncdb'.format(virtualenv_python, config))
-        sudo('{0} manage_{1}.py migrate'.format(virtualenv_python, config))
 
 
 def _reload_code(config, init_dir):

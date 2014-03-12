@@ -5,7 +5,6 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^$', 'common.views.hello_world', name='hello_world'),
-    url(r'^users/', include('users.urls')),
 
     # Examples:
     # url(r'^$', 'guidcoin.views.home', name='home'),
@@ -15,5 +14,5 @@ urlpatterns = patterns('',
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
+    #url(r'^admin/', include(admin.site.urls)),
 )
