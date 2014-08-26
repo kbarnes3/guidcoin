@@ -122,10 +122,11 @@ INSTALLED_APPS = (
     'widget_tweaks',
     'common',
     #'django.contrib.admin',
-    #'south',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 #TEMPLATE_CONTEXT_PROCESSORS = (
 #    'django.contrib.messages.context_processors.messages'

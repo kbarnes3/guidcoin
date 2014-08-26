@@ -3,15 +3,19 @@ from fabric.api import cd, run, settings, sudo
 configurations = {
     'daily': {
         'branch': 'master',
+        'ssl': False,
     },
     'dev': {
         'branch': 'master',
+        'ssl': False,
     },
     'prod': {
         'branch': 'prod',
+        'ssl': False,
     },
     'staging': {
         'branch': 'prod',
+        'ssl': False,
     },
 }
 
@@ -19,21 +23,20 @@ configurations = {
 def deploy(config):
     configuration = configurations[config]
     branch = configuration['branch']
+    use_ssl = configuration['ssl']
 
     PYTHON_DIR = '/var/www/python'
     repo_dir = '{0}/guidcoin-{1}'.format(PYTHON_DIR, config)
     web_dir = '{0}/web'.format(repo_dir)
-    config_dir = '{0}/config/ubuntu-12.04'.format(repo_dir)
-    daily_scripts_dir = '{0}/cron.daily'.format(config_dir)
-    init_dir = '{0}/init.d'.format(config_dir)
+    config_dir = '{0}/config/ubuntu-14.04'.format(repo_dir)
+    uwsgi_dir = '{0}/uwsgi'.format(config_dir)
     nginx_dir = '{0}/nginx'.format(config_dir)
     virtualenv_python = '{0}/venv/bin/python'.format(repo_dir)
 
     _update_source(repo_dir, branch)
     _compile_source(config, repo_dir, web_dir, virtualenv_python)
-    _update_scripts(config, daily_scripts_dir)
-    _reload_code(config, init_dir)
-    _reload_web(config, nginx_dir)
+    _reload_code(config, uwsgi_dir)
+    _reload_web(config, nginx_dir, use_ssl)
     _run_tests(config, web_dir, virtualenv_python)
 
 
@@ -64,30 +67,22 @@ def _compile_source(config, repo_dir, web_dir, virtualenv_python):
         sudo('{0} manage_{1}.py collectstatic --noinput'.format(virtualenv_python, config))
 
 
-def _update_scripts(config, daily_scripts_dir):
-    CRON_DAILY_DIR = '/etc/cron.daily'
-    with cd(daily_scripts_dir):
-        sudo('cp guidcoin-{0}-* {1}'.format(config, CRON_DAILY_DIR))
+def _reload_code(config, uwsgi_dir):
+    with cd(uwsgi_dir):
+        sudo('cp guidcoin-{0}.ini /etc/uwsgi/apps-enabled'.format(config))
+        sudo('chmod 755 /etc/uwsgi/apps-enabled/guidcoin-{0}.ini'.format(config))
+        sudo('/etc/init.d/uwsgi start guidcoin-{0}'.format(config))
+        sudo('/etc/init.d/uwsgi reload guidcoin-{0}'.format(config))
 
-    with cd(CRON_DAILY_DIR):
-        sudo('chmod 755 guidcoin-{0}-*'.format(config))
-
-
-def _reload_code(config, init_dir):
-    with cd(init_dir):
-        sudo('cp guidcoin-{0} /etc/init.d'.format(config))
-        sudo('chmod 755 /etc/init.d/guidcoin-{0}'.format(config))
-        sudo('update-rc.d guidcoin-{0} defaults'.format(config))
-        sudo('update-rc.d guidcoin-{0} enable'.format(config))
-        sudo('/etc/init.d/guidcoin-{0} restart'.format(config))
-
-def _reload_web(config, nginx_dir):
+def _reload_web(config, nginx_dir, ssl):
     with cd(nginx_dir):
         sudo('cp {0}-guidcoin-com /etc/nginx/sites-enabled/'.format(config))
-        #sudo('cp ssl/{0}.guidcoin.com.* /etc/nginx/ssl'.format(config))
-        #sudo('chown root /etc/nginx/ssl/{0}.guidcoin.com.*'.format(config))
-        #sudo('chgrp root /etc/nginx/ssl/{0}.guidcoin.com.*'.format(config))
-        #sudo('chmod 644 /etc/nginx/ssl/{0}.guidcoin.com.*'.format(config))
+        if ssl:
+            sudo('cp ssl/{0}.guidcoin.com.* /etc/nginx/ssl'.format(config))
+            sudo('chown root /etc/nginx/ssl/{0}.guidcoin.com.*'.format(config))
+            sudo('chgrp root /etc/nginx/ssl/{0}.guidcoin.com.*'.format(config))
+            sudo('chmod 644 /etc/nginx/ssl/{0}.guidcoin.com.*'.format(config))
+
         sudo('/etc/init.d/nginx reload')
 
 
@@ -97,11 +92,11 @@ def _run_tests(config, web_dir, virtualenv_python):
 
 
 def deploy_global_config(config):
-    global_dir = '/var/www/python/guidcoin-{0}/config/ubuntu-12.04/global'.format(config)
+    global_dir = '/var/www/python/guidcoin-{0}/config/ubuntu-14.04/global'.format(config)
     SHARED_MEM = '/etc/sysctl.d/30-postgresql-shm.conf'
     NGINX_CONF = '/etc/nginx/nginx.conf'
-    POSTGRES_HBA = '/etc/postgresql/9.1/main/pg_hba.conf'
-    POSTGRES_CONF = '/etc/postgresql/9.1/main/postgresql.conf'
+    POSTGRES_HBA = '/etc/postgresql/9.3/main/pg_hba.conf'
+    POSTGRES_CONF = '/etc/postgresql/9.3/main/postgresql.conf'
 
     with cd(global_dir):
         sudo('cp 30-postgresql-shm.conf {0}'.format(SHARED_MEM))
@@ -131,7 +126,7 @@ def shutdown(config):
 
     PYTHON_DIR = '/var/www/python'
     repo_dir = '{0}/guidcoin-{1}'.format(PYTHON_DIR, config)
-    nginx_dir = '{0}/config/ubuntu-12.04/nginx/shutdown'.format(repo_dir)
+    nginx_dir = '{0}/config/ubuntu-14.04/nginx/shutdown'.format(repo_dir)
 
     _update_source(repo_dir, branch)
     _reload_web(config, nginx_dir)

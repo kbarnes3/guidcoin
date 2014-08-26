@@ -1,19 +1,22 @@
-To set up a GUIDcoin server from a fresh Ubuntu Server 12.04 LTS installation:
+To set up a GUIDcoin server from a fresh Ubuntu Server 14.04 LTS installation:
 
 1. Run 'sudo apt-get update'
 2. Run 'sudo apt-get dist-upgrade'
 3. Install the OpenSSH server using 'sudo apt-get install openssh-server'
-4. Run 'ssh-keygen -C _email_' and register ~/.ssh/id_rsa.pub with GitHub
-5. In the /web directory in a local dev environment, run 'fab setup_server'
+4. Run 'ssh-keygen -C _email_' and register ~/.ssh/id_rsa.pub with GitHub. An empty passphrase is less secure, but makes deployments faster.
+5. In the /web directory in a local dev environment, run 'fab setup_server' or 'fab setup_server:setup_wins=True' depending on whether WINS name resolution is needed. When in doubt, omit setup_wins.
 6. When prompted for a host string, enter one in the form of '_user_@_host_'
 7. When prompted to "enter password for new role", enter a password to remotely access PostgreSQL
 
 To set up a new deployment on a properly configured (see above) GUIDcoin server:
-1. In the /web directory in a local dev environment, run 'fab setup_deployment:_deployment_,"_git@github.com:user/repo.git_"'
-2. When prompted for a host string, enter one in the form of '_user_@_host_'
-3. To deploy changes in the future, after committing/pushing run 'fab deploy:_deployment_'
-4. If this is the first deployment on a server, consider updating the global configurations for the server. To do so:
-    1. Update the files in /config/ubuntu-12.04/global. Look for the 'GUIDcoin' prompts for commonly changed values
+1. Consider updating the username and password found in /web/guidcoin/settings__deployment_.py and committing/pushing it. Note that the Fabric script won't work with passwords containing shell escape characters.
+2. In the /web directory in a local dev environment, run 'fab setup_deployment:_deployment_,"_git@github.com:user/repo.git_"'
+3. When prompted for a host string, enter one in the form of '_user_@_host_'
+4. When prompted for a primary email and subsequent fields, enter the information for the Django superuser to create
+5. To deploy changes in the future, after committing/pushing run 'fab deploy:_deployment_'
+6. If this is the first deployment on a server, consider updating the global configurations for the server. To do so:
+    1. Update the files in /config/ubuntu-14.04/global. Look for the 'guidcoin' prompts for commonly changed values
     2. After updating, commit/push your changes and run fab deploy
     3. Run 'fab deploy_global_config:_deployment_'
+    4. If PostgreSQL does not start after the update, a reboot may be needed
 
